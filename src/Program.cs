@@ -8,6 +8,7 @@ using FubarDev.FtpServer.AccountManagement;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NLog.Extensions.Logging;
+using System.Threading.Tasks;
 
 namespace GoogleStorageFtp
 {
@@ -54,6 +55,7 @@ namespace GoogleStorageFtp
 
                 try
                 {
+                    var running = True;
                     // Initialize the FTP server
                     var ftpServerHost = serviceProvider.GetRequiredService<IFtpServerHost>();
 
@@ -65,9 +67,13 @@ namespace GoogleStorageFtp
                         ftpServerHost.StopAsync(CancellationToken.None).ConfigureAwait(false);
                         Console.WriteLine("Bye!");
                         _closingEvent.Set();
+                        running = False
                     });
 
                     _closingEvent.WaitOne();
+                    while (running) {
+                        Task.Delay(30000).Wait();
+                    }
                 }
                 catch (Exception ex)
                 {
