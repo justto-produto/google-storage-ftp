@@ -13,6 +13,8 @@ namespace GoogleStorageFtp
 {
     class Program
     {
+        private static readonly AutoResetEvent _closingEvent = new AutoResetEvent(false);
+
         static void Main(string[] args)
         {
             var services = new ServiceCollection().AddLogging(config => config.SetMinimumLevel(LogLevel.Trace));
@@ -58,11 +60,14 @@ namespace GoogleStorageFtp
                     // Start the FTP server
                     ftpServerHost.StartAsync(CancellationToken.None).ConfigureAwait(false);
 
-                    Console.WriteLine("The FTP server is running. Press any key to kill the server...");
-                    Console.ReadLine();
+                    Console.WriteLine("Press Ctrl + C to exit");
+                    Console.CancelKeyPress += ((s, a) => {
+                        ftpServerHost.StopAsync(CancellationToken.None).ConfigureAwait(false);
+                        Console.WriteLine("Bye!");
+                        _closingEvent.Set();
+                    });
 
-                    // Stop the FTP server
-                    ftpServerHost.StopAsync(CancellationToken.None).ConfigureAwait(false);
+                    _closingEvent.WaitOne();
                 }
                 catch (Exception ex)
                 {

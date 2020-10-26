@@ -35,14 +35,14 @@ EXPOSE 10009/udp
 COPY src/GoogleStorageFtp.csproj ./
 RUN dotnet restore
 
+COPY gc.json ./
+ENV GOOGLE_APPLICATION_CREDENTIALS /app/gc.json
+
+ENV DISABLE_TLS True
+
 # Copy everything else and build
 COPY src/. ./
 RUN dotnet publish -c Release -o out
-
-# Copy PFX and service account files
-COPY ftp.pfx ./
-COPY my-service-account.json ./
-ENV GOOGLE_APPLICATION_CREDENTIALS /app/my-service-account.json
 
 # Run the app
 ENTRYPOINT ["dotnet", "out/GoogleStorageFtp.dll"]
